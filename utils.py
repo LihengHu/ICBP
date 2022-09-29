@@ -140,7 +140,7 @@ def test(net1, test_data):
     return metrics.acc(t2, t1), metrics.nmi(t2, t1)
 
 
-def train_nolabel(net1, net2, train_data,test_data,epoch, optimizer_en, optimizer_de, criterion ,criterion1):
+def train_nolabel(net1, net2, train_data,test_data,epoch, criterion ):
     if torch.cuda.is_available():
         net1 = torch.nn.DataParallel(net1, device_ids=device_ids)
 
@@ -211,12 +211,6 @@ def train_nolabel(net1, net2, train_data,test_data,epoch, optimizer_en, optimize
                 +criterion(output_classifier15, output_classifier14,0)\
                     )
 
-
-        loss2 = 8*(criterion1(output_classifier13, output_classifier14)  \
-                +criterion1(output_classifier12, output_classifier13)  \
-                +criterion1(output_classifier12, output_classifier11) \
-                +criterion1(output_classifier14, output_classifier)  \
-                +criterion1(output_classifier15, output_classifier14))
         ###############################################################
         # add noise --mse  boundary
         sigma = generator_noise(output_classifier.size(0), output_classifier.size(1))
@@ -241,7 +235,7 @@ def train_nolabel(net1, net2, train_data,test_data,epoch, optimizer_en, optimize
         loss3 = 2* mmd_rbf(z_real, z_Pedcc)
         z_real.register_hook(print_grad)
         # loss
-        loss =  loss1 + loss2 + loss3
+        loss =  loss1 + loss3
         #loss=loss3+loss1###onlymmd
         # backward
         optimizer_en.zero_grad()
@@ -252,7 +246,6 @@ def train_nolabel(net1, net2, train_data,test_data,epoch, optimizer_en, optimize
         #
         train_loss += loss.item()
         train_loss1 += loss1.item()
-        train_loss2 += loss2.item()
         train_loss3 += loss3.item()
     #     # deal grad
     #     x_norm = np.linalg.norm(np.array(grad_list),ord=None,axis=1,keepdims=False).sum()
